@@ -1,0 +1,10 @@
+jupyterlab
+ipykernel
+numpy
+pandas
+matplotlib
+scipy
+scikit-learn
+openpyxl
+xgboost
+requests

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+*.env
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.log
+
+# Saved models
+Models/*.pkl
+Models/*.joblib
+
+# Raw research data
+Data/Raw/korean migraine study.xls
+Data/Raw/korean_migraine_study_translated.xlsx
+Data/Raw/S1File.xls
+
+# Processed datasets (can remove this from .gitignore later)
+Data/Processed/*.csv
+Data/Processed/*.xlsx
+
+# Project folders not tracked
+Articles/
+Manuscripts/
+Resources/
+
+# Miscellaneous
+Excel_Research_Template.xlsx
+2.0.1
