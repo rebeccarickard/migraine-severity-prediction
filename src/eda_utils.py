@@ -1,9 +1,10 @@
 """Reusable functions for exploratory data analysis."""
 
-from collections.abc import Sequence
-
 import matplotlib.pyplot as plt
 import pandas as pd
+
+from collections.abc import Sequence
+from scipy.stats import chi2_contingency
 
 
 def validate_binary_columns(
@@ -421,3 +422,176 @@ def add_benjamini_hochberg_correction(
     ).fillna(False)
 
     return corrected
+
+
+def analyze_categorical_associations(
+    data: pd.DataFrame,
+    variable: str,
+    target: str,
+    target_order: Sequence[str] | None = None,
+) -> tuple[dict, dict[str, pd.DataFrame]]:
+    """
+    Test the association between a categorical predictor and a categorical target.
+
+    This function:
+    1. Creates an observed-count contingency table.
+    2. Creates a row-normalized percentage table.
+    3. Performs a chi-square test of independence.
+    4. Calculates Cramér's V.
+    5. Evaluates expected cell counts to assess chi-square assumptions.
+
+    Parameters
+    ----------
+    data
+        DataFrame containing the predictor and target.
+    variable
+        Name of the categorical predictor column.
+    target
+        Name of the categorical outcome column.
+    target_order
+        Optional desired order of target categories.
+
+    Returns
+    -------
+    results
+        Dictionary containing statistical results and assumption checks.
+    crosstabs
+        Dictionary containing observed counts, row percentages,
+        and expected counts.
+    """
+
+    analysis_data = data[[target, variable]].dropna()
+
+    observed = pd.crosstab(
+        analysis_data[target],
+        analysis_data[variable],
+    )
+
+    if target_order is not None:
+        observed = observed.reindex(target_order, fill_value=0)
+
+    # Chi-square requires at least two categories
+    # for both the predictor and target.
+    if observed.shape[0] < 2 or observed.shape[1] < 2:
+        results = {
+            "Feature": variable,
+            "N": len(analysis_data),
+            "Chi-Square": np.nan,
+            "Degrees of Freedom": np.nan,
+            "P-Value": np.nan,
+            "Cramers V": np.nan,
+            "Minimum Expected Count": np.nan,
+            "Expected Counts Below 5": np.nan,
+            "Expected Counts Below 1": np.nan,
+            "Proportion Expected Below 5": np.nan,
+            "Assumptions Met": False,
+            "Status": "Insufficient category variation",
+        }
+
+        crosstabs = {
+            "counts": observed,
+            "row_percentages": (
+                observed
+                .div(observed.sum(axis=1), axis=0)
+                .mul(100)
+                .round(2)
+            ),
+        }
+
+        return results, crosstabs
+
+    chi2, p_value, dof, expected = chi2_contingency(
+        observed,
+        correction=False,
+    )
+
+    sample_size = observed.to_numpy().sum()
+    rows, columns = observed.shape
+
+    denominator = min(rows - 1, columns - 1)
+
+    cramers_v = (
+        np.sqrt((chi2 / sample_size) / denominator)
+        if sample_size > 0 and denominator > 0
+        else np.nan
+    )
+
+    expected_table = pd.DataFrame(
+        expected,
+        index=observed.index,
+        columns=observed.columns,
+    )
+
+    minimum_expected = expected.min()
+    expected_below_five = int((expected < 5).sum())
+    expected_below_one = int((expected < 1).sum())
+    total_expected_cells = expected.size
+
+    proportion_below_five = (
+        expected_below_five / total_expected_cells
+    )
+
+    # Common chi-square assumption guideline:
+    # - no expected count below 1
+    # - no more than 20% of expected counts below 5
+    assumptions_met = (
+        expected_below_one == 0
+        and proportion_below_five <= 0.20
+    )
+
+    percentage_table = (
+        observed
+        .div(observed.sum(axis=1), axis=0)
+        .mul(100)
+        .round(2)
+    )
+
+    results = {
+        "Feature": variable,
+        "N": sample_size,
+        "Chi-Square": chi2,
+        "Degrees of Freedom": dof,
+        "P-Value": p_value,
+        "Cramers V": cramers_v,
+        "Minimum Expected Count": minimum_expected,
+        "Expected Counts Below 5": expected_below_five,
+        "Expected Counts Below 1": expected_below_one,
+        "Proportion Expected Below 5": proportion_below_five,
+        "Assumptions Met": assumptions_met,
+        "Status": "Test completed",
+    }
+
+    crosstabs = {
+        "counts": observed,
+        "row_percentages": percentage_table,
+        "expected_counts": expected_table,
+    }
+
+    return results, crosstabs
+
+
+def calculate_phi_matrix(
+    data: pd.DataFrame,
+    variables: Sequence[str],
+) -> pd.DataFrame:
+    """
+    Calculate pairwise phi coefficients among binary variables.
+
+    Parameters
+    ----------
+    data
+        DataFrame containing the binary variables.
+    variables
+        Names of binary predictor columns.
+
+    Returns
+    -------
+    phi_matrix
+        Symmetric matrix of pairwise phi coefficients.
+    """
+
+    binary_data = data[list(variables)].copy()
+
+    phi_matrix = binary_data.corr(method="pearson")
+
+    return phi_matrix
