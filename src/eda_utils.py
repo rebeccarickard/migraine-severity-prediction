@@ -595,3 +595,15 @@ def calculate_phi_matrix(
     phi_matrix = binary_data.corr(method="pearson")
 
     return phi_matrix
+
+
+# Interpret epsilon-squared effect sizes
+def interpret_epsilon_squared(value):
+    if value < 0.01:
+        return "Negligible"
+    elif value < 0.06:
+        return "Small"
+    elif value < 0.14:
+        return "Moderate"
+    else:
+        return "Large"

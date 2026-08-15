@@ -17,16 +17,12 @@ FIGURES_DIR = PROJECT_ROOT / "Figures and Tables"
 RESULTS_DIR = PROJECT_ROOT / "Results"
 MODELS_DIR = PROJECT_ROOT / "Models"
 
-RAW_DATA_FILE = (
-    RAW_DATA_DIR
-    / "korean_migraine_study_translated.xlsx"
-)
+RAW_DATA_FILE = (RAW_DATA_DIR / "korean_migraine_study_translated.xlsx")
 
-CLEAN_DATA_FILE = (
-    PROCESSED_DATA_DIR
-    / "migraine_daily_diary_clean.csv"
-)
+CLEAN_DATA_FILE = (PROCESSED_DATA_DIR / "migraine_daily_diary_clean.csv")
 
+
+WEATHER_ENRICHED_DATA_FILE = PROCESSED_DATA_DIR / "migraine_weather_enriched.csv"
 
 # ============================================================
 # Reproducibility
@@ -123,17 +119,46 @@ TEMPORAL_FEATURES = [
 
 # ============================================================
 # Weather API features
-# Add these after integrating historical weather data
 # ============================================================
 
-WEATHER_FEATURES = [
-    # "temperature_2m",
-    # "relative_humidity_2m",
-    # "surface_pressure",
-    # "precipitation",
-    # "temperature_change_24h",
-    # "pressure_change_24h",
+WEATHER_RAW_FEATURES = [
+    "temperature_2m",
+    "relative_humidity_2m",
+    "surface_pressure",
+    "pressure_msl",
 ]
+
+WEATHER_CHANGE_24H_FEATURES = [
+    "relative_humidity_change_24h",
+    "temperature_change_24h",
+    "pressure_msl_change_24h",
+    "surface_pressure_change_24h",
+]
+
+WEATHER_CHANGE_48H_FEATURES = [
+    "relative_humidity_change_48h",
+    "temperature_change_48h",
+    "pressure_msl_change_48h",
+    "surface_pressure_change_48h",
+]
+
+WEATHER_CHANGE_72H_FEATURES = [
+    "relative_humidity_change_72h",
+    "temperature_change_72h",
+    "pressure_msl_change_72h",
+    "surface_pressure_change_72h",
+]
+
+WEATHER_CHANGE_FEATURES_ALL = (
+    WEATHER_CHANGE_24H_FEATURES
+    + WEATHER_CHANGE_48H_FEATURES
+    + WEATHER_CHANGE_72H_FEATURES
+)
+
+WEATHER_FEATURES = (
+    WEATHER_RAW_FEATURES
+    + WEATHER_CHANGE_FEATURES_ALL
+)
 
 
 # ============================================================
