@@ -607,3 +607,15 @@ def interpret_epsilon_squared(value):
         return "Moderate"
     else:
         return "Large"
+
+
+def circular_diff(series, periods):
+    """
+    Calculate the shortest signed change in wind direction.
+
+    Positive values = clockwise shift.
+    Negative values = counterclockwise shift.
+    Range: -180 to 180 degrees.
+    """
+    previous = series.shift(periods)
+    return ((series - previous + 180) % 360) - 180
